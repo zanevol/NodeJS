@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Socket</title>
+    <script src="https://cdn.socket.io/4.2.0/socket.io.min.js" integrity="sha384-PiBR5S00EtOj2Lto9Uu81cmoyZqR57XcOna1oAuVuIEjzj0wpqDVfD0JA9eXlRsj" crossorigin="anonymous"></script>
+    <style>
+        .invisible{
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<form id="login">
+    <label>Логин: <input type="text" name="username"></label>
+    <input type="submit">
+</form>
+
+<form id="chat" class="invisible">
+    <input name="textMessage"
+           type="text"
+           autofocus>
+    <button>Send</button>
+    <div id="messages"></div>
+</form>
+<script>
+    const login = document.querySelector('#login');
+    const chat = document.querySelector('#chat');
+    const input = document.querySelector('#input');
+    const messages = document.querySelector('#messages');
+    let socket = null;
+    let userName = '';
+
+    login.addEventListener('submit', evt => {
+        evt.preventDefault();
+
+        if (evt.target.elements.username.value.trim() === '') return;
+        console.log('Отправка')
+        userName = evt.target.elements.username.value;
+        hideLogin();
+        showChat();
+        createSocket();
+    });
+
+    chat.addEventListener('submit', evt => {
+        evt.preventDefault();
+        const message = evt.target.elements.textMessage.value;
+        if (!message || !socket) return;
+        socket.emit('client-msg', { message });
+        evt.target.elements.textMessage.value = '';
+    })
+
+    function hideLogin() {
+        login.classList.add('invisible')
+    }
+
+    function showChat() {
+        chat.classList.remove('invisible');
+    }
+
+    function createSocket() {
+        socket = io('localhost:3000');
+        socket.on('connect', () => {
+            console.log('Connected');
+            socket.emit('new-client', {  userName });
+        });
+        socket.on('server-msg', data => {
+            messages.insertAdjacentHTML('afterbegin', `<div>${data.message}</div>`);
+        });
+    }
+
+
+    // sendButton.onclick = () => {
+    //     const data = {
+    //         message: input.value,
+    //     };
+    //
+    //     socket.emit('client-msg', data);
+    //
+    //     input.value = '';
+    // }
+
+
+</script>
+</body>
+</html>
